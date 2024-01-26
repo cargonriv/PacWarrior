@@ -2,7 +2,7 @@
 import _PyPacwar
 import random
 
-
+NUM_RDMS = 2
 def generate_individual():
     return ''.join(str(random.choice([0, 1, 2, 3])) for _ in range(50))
 
@@ -27,9 +27,13 @@ def fitness(champion):
     score_ones = physical(ones)
     score_threes = physical(threes)
 
+    scores_random = 0
+    # for i in range(NUM_RDMS): #measure of performance against random genes, weight
+    #     scores_random += physical(generate_individual()) / NUM_RDMS * 1.0
+
     # Weighted average to balance performance
     #TODO: figure out a good way to discourage bad performance (done in score_calc_searching)
-    total_score = score_ones + score_threes
+    total_score = score_ones + score_threes + scores_random
 
     # if total_score == 0:
     #     return 0
@@ -79,15 +83,16 @@ def score_calc_searching(round, warrior, opp):
     #max rounds: 500
     if (opp == 0):
         if (round < 100):
-            return 170 + 20
+            return 7 + 20
         if (round < 200):
-            return 170 + 19
+            return 7 + 19
         if (round < 300):
-            return 170 + 18
+            return 7 + 18
         if (round < 501):
-            return 170 + 17
+            return 7 + 17
     ratio = warrior / opp * 1.0 #ratio of warrior mites remaining to opp mites remaining after 500 rounds
-
+    if ratio == 0: #discourage losing by having a negative score based on remaining opponents 
+        return -opp
     return ratio
 
 def score_calc_no_zero(round, warrior, opp):
@@ -122,7 +127,7 @@ def crossover(parent1, parent2):
     return child1, child2
 
 
-def mutate(individual, mutation_rate=0.02):
+def mutate(individual, mutation_rate=0.06):
     individual = list(individual)
     for i, _ in enumerate(individual):
         if random.random() < mutation_rate:
@@ -139,27 +144,37 @@ def test(champion):
     print(f"Champs vs All-Threes: Rounds = {rounds_threes}, Champs Remaining = {c1_threes}, All-Threes Remaining = {c2_threes}")
 
 
-def genetic_algorithm(population_size=100, generations=100):
+def genetic_algorithm(population_size=100, generations=500):
     population = [generate_individual() for _ in range(population_size)]
 
     for gen in range(generations):
         fitness_scores = [fitness(ind) for ind in population]
         print(f"Generation {gen+1}/{generations} - Best Fitness: {max(fitness_scores)}")
+        # print(len(set(population))) #number of unique genes in the population
+        #TODO: measure population change from generation to generation
 
         # Tournament selection
-        selected = [max(random.sample(list(zip(population, fitness_scores)), 5), key=lambda x: x[1])[0] for _ in population]
-
-        next_generation = []
-        while len(next_generation) < population_size:
-            parent1, parent2 = random.choices(selected, k=2)
-            child1, child2 = crossover(parent1, parent2)
-            next_generation.extend([mutate(child1), mutate(child2)])
-
+        # selected = [max(random.sample(list(zip(population, fitness_scores)), 20), key=lambda x: x[1])[0] for _ in population]
+        selected = [x[0] for x in sorted(zip(population, fitness_scores), key=lambda x: x[1], reverse=True)[:2]]
+        # print(len(set(selected))) #number of unique top selected genes
+        #TODO: store fitness data 
+        next_generation = [] #TODO: include some random genes?
+        while len(next_generation) < population_size: #TODO: try different things here?
+            next_generation.extend(find_next(selected))
         population = next_generation
 
     best_individual = max(population, key=lambda ind: fitness(ind))
     return best_individual
 
+def find_next_really_random(selected):
+    parent1, parent2 = random.choices(selected, k=2)
+    child1, child2 = crossover(parent1, parent2)
+    return [mutate(child1), mutate(child2), child1, child2]
+
+def find_next(selected):
+    parent1, parent2 = selected[0], selected[1]
+    child1, child2 = crossover(parent1, parent2)
+    return [child1, child2, mutate(parent1), mutate(parent2)]
 
 neurostrategist_gene = genetic_algorithm()
 
