@@ -19,22 +19,101 @@ def fitness(champion):
     def physical(opponent):
         rounds, c1, c2 = _PyPacwar.battle(list(map(int, champion)), list(map(int, opponent)))
     #     return rounds + c1 - c2  # Example fitness calculation
-
+        #c1: remaining warrior mites, c2 = remaining opponent mites, round = number of rounds passed
     # return physical(champion, ones) + physical(champion, threes)
-
-        return max(0, rounds + c1 - c2)  # Score combining rounds and remaining mites
+        score = score_calc_searching(rounds, c1, c2)
+        return score
+        # return max(0, rounds + c1 - c2)  # Score combining rounds and remaining mites
     score_ones = physical(ones)
     score_threes = physical(threes)
 
     # Weighted average to balance performance
+    #TODO: figure out a good way to discourage bad performance (done in score_calc_searching)
     total_score = score_ones + score_threes
-    if total_score == 0:
-        return 0
-    weight_ones = score_threes / total_score
-    weight_threes = score_ones / total_score
 
-    return weight_ones * score_ones + weight_threes * score_threes
+    # if total_score == 0:
+    #     return 0
+    # weight_threes = score_threes / total_score
+    # weight_ones = score_ones / total_score
 
+    # return weight_ones * score_ones + weight_threes * score_threes
+    return total_score
+
+def score_calc(round, warrior, opp):
+    #rounds done, warrior mites remaining, opps remaining
+    #real one, based on canvas
+    #max rounds: 500
+    if (opp == 0):
+        if (round < 100):
+            return 20
+        if (round < 200):
+            return 19
+        if (round < 300):
+            return 18
+        if (round < 501):
+            return 17
+    ratio = warrior / opp * 1.0 #ratio of warrior mites remaining to opp mites remaining after 500 rounds
+
+    if (ratio > 10):
+        return 13
+    if (ratio > 3):
+        return 12
+    if (ratio > 1.5):
+        return 11
+    if (ratio < 1.5) and (ratio > 2 / 3.0):
+        return 10
+    return 0
+
+
+def score_calc_searching(round, warrior, opp):
+    """
+    rounds done, warrior mites remaining, opps remaining
+    good for getting other opponents defeated
+    at worst, we will not defeat the opp in 500 rounds, leaving some ratio of Warrior : opp. 
+    higher ratio is better, max ratio is 9*19 (dimension of grid) = 171 - 1 = 170 : 1
+    at best, we defeat the opponent. score is based on the canvas thing (added 170)
+
+    Max score is 190
+    TODO: if we get stuck in 0, then may want to encode remaining opp mites in score
+    """ 
+    #max rounds: 500
+    if (opp == 0):
+        if (round < 100):
+            return 170 + 20
+        if (round < 200):
+            return 170 + 19
+        if (round < 300):
+            return 170 + 18
+        if (round < 501):
+            return 170 + 17
+    ratio = warrior / opp * 1.0 #ratio of warrior mites remaining to opp mites remaining after 500 rounds
+
+    return ratio
+
+def score_calc_no_zero(round, warrior, opp):
+    #rounds done, warrior mites remaining, opps remaining
+    #
+    #max rounds: 500
+    if (opp == 0):
+        if (round < 100):
+            return 20
+        if (round < 200):
+            return 19
+        if (round < 300):
+            return 18
+        if (round < 501):
+            return 17
+    ratio = warrior / opp * 1.0 #ratio of warrior mites remaining to opp mites remaining after 500 rounds
+
+    if (ratio > 10):
+        return 13
+    if (ratio > 3):
+        return 12
+    if (ratio > 1.5):
+        return 11
+    if (ratio < 1.5) and (ratio > 2 / 3.0):
+        return 10
+    return ratio
 
 def crossover(parent1, parent2):
     crossover_point = random.randint(1, len(parent1) - 2)
