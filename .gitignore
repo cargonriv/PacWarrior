@@ -1,5 +1,5 @@
-Pacwar/.vscode/
-Pacwar/python/build
-Pacwar/python/*.pyd
-Pacwar/python/*/*.so
-Pacwar/python/*.so
+/Pacwar/.vscode
+/Pacwar/python/build
+/Pacwar/python/*.pyd
+/Pacwar/python/*/*.so
+/Pacwar/python/*.so
