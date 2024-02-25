@@ -1,9 +1,11 @@
-# import numpy as np
 import os
-import _PyPacwar
 import random
+# import numpy as np
+import _PyPacwar
 from pathlib import Path
 
+stagnation_counter = 0
+best_fitness = None
 NUM_RANDOMS = 2
 results_dir = 'results'
 if not os.path.exists(results_dir):
@@ -35,14 +37,9 @@ def fitness(warrior, best_performing_gene):
     ones = [1] * 50
     threes = [3] * 50
     opponents = [ones, threes, best_performing_gene]
-
     def physical(opponent):
         rounds, c1, c2 = _PyPacwar.battle(list(map(int, warrior)), list(map(int, opponent)))
-    #     return rounds + c1 - c2  # Example fitness calculation
-        #c1: remaining warrior mites, c2 = remaining opponent mites, round = number of rounds passed
-    # return physical(warrior, ones) + physical(warrior, threes)
-        # score = score_calc_searching(rounds, c1, c2)
-        score = score_calc_efficiency(rounds, c1, c2)
+        score = efficient_score_calc(rounds, c1, c2)
         return score
         # Score combining rounds and remaining mites
         # return max(0, rounds + c1 - c2)
@@ -67,7 +64,8 @@ def fitness(warrior, best_performing_gene):
     scores = [physical(opponent) for opponent in opponents]
     return sum(scores), scores[0], scores[1], scores[2]
 
-def score_calc(round, warrior, opp):
+
+def simple_score_calc(round, warrior, opp):
     #rounds done, warrior mites remaining, opps remaining
     #real one, based on canvas
     #max rounds: 500
@@ -93,7 +91,7 @@ def score_calc(round, warrior, opp):
     return 0
 
 
-def score_calc_searching(rounds, warrior, opp):
+def score_calc(rounds, warrior, opp):
     """
     rounds done, warrior mites remaining, opps remaining
     good for getting other opponents defeated
@@ -117,7 +115,7 @@ def score_calc_searching(rounds, warrior, opp):
     return ratio
 
 
-def score_calc_efficiency(rounds, warrior, opp):
+def efficient_score_calc(rounds, warrior, opp):
     base_score = 0
     if opp == 0:  # Victory
         base_score = 170  # Maximum score for defeating the opponent
@@ -141,32 +139,6 @@ def score_calc_efficiency(rounds, warrior, opp):
     # Encourage survival by adding a component based on the remaining number of warriors
     survival_bonus = warrior * 0.1
     return base_score + survival_bonus
-
-
-def score_calc_no_zero(round, warrior, opp):
-    #rounds done, warrior mites remaining, opps remaining
-    #
-    #max rounds: 500
-    if (opp == 0):
-        if (round < 100):
-            return 20
-        if (round < 200):
-            return 19
-        if (round < 300):
-            return 18
-        if (round < 501):
-            return 17
-    ratio = warrior / opp * 1.0 #ratio of warrior mites remaining to opp mites remaining after 500 rounds
-
-    if (ratio > 10):
-        return 13
-    if (ratio > 3):
-        return 12
-    if (ratio > 1.5):
-        return 11
-    if (ratio < 1.5) and (ratio > 2 / 3.0):
-        return 10
-    return ratio
 
 
 def crossover(parent1, parent2):
@@ -193,12 +165,6 @@ def tournament_selection(population, fitness_scores, tournament_size=3):
     return selected_parents
 
 
-def incorporate_elitism(population, fitness_scores, elite_size=2):
-    sorted_by_fitness = sorted(zip(population, fitness_scores), key=lambda x: x[1], reverse=True)
-    elites = [individual for individual, score in sorted_by_fitness[:elite_size]]
-    return elites
-
-
 def reproduce(selected, mutation_rate, population_size):
     new_population = []
     while len(new_population) < population_size:
@@ -217,11 +183,10 @@ def test(warrior):
     print(f"Warrior vs All-Threes: Rounds = {rounds_threes}, Warriors Remaining = {c1_threes}, All-Threes Remaining = {c2_threes}")
 
 
-# Initialize storage for fitness scores and populations
-fitness_scores_over_generations = []
-populations_over_generations = []
-def genetic_algorithm(population_size=100, generations=100, mutation_rate=0.02, crossover_rate=0.6, saved_individual=True):
-    best_individual = load_best_individual()
+# Genetic algorithm implementation with dynamic adjustments and diversity-promoting selection
+def genetic_algorithm(population_size=1000, generations=100, mutation_rate=0.02, crossover_rate=0.6, saved_individual=True):
+    global stagnation_counter
+    best_individual = load_best_individual()  # Attempt to load the best gene from previous runs
     if best_individual:
         population = [best_individual] + [generate_individual() for _ in range(population_size - 1)]
         best_fitness = fitness(best_individual, best_individual)[0]
@@ -230,7 +195,7 @@ def genetic_algorithm(population_size=100, generations=100, mutation_rate=0.02, 
         best_fitness = None
 
     for gen in range(generations):
-        fitness_scores = [fitness(ind)[0] for ind in population]
+        fitness_scores = [fitness(individual, best_individual)[0] for individual in population]
         # if best_fitness is None or max(fitness_scores) > best_fitness:
         #     best_fitness = max(fitness_scores)
         #     best_individual = population[fitness_scores.index(best_fitness)]
@@ -256,29 +221,7 @@ def genetic_algorithm(population_size=100, generations=100, mutation_rate=0.02, 
             best_individual = current_best_individual
             save_best_individual(best_individual)
 
-        next_generation = []
-
-        fitness_scores_threes = [fitness(ind, best_individual)[2] for ind in population]
-        fitness_score_ones = [fitness(ind, best_individual)[1] for ind in population]
-        fitness_scores_over_generations.append(max(fitness_scores))
-        populations_over_generations.append(population.copy())
-
-        print(f"Generation {gen+1}/{generations} - Best Fitness: {current_best_fitness}")
-        # print(f"Generation {gen+1}/{generations} - Best Fitness: {max(fitness_scores)}")
-        # # print(len(set(population))) #number of unique genes in the population
-        # #TODO: measure population change from generation to generation
-
-        # # Tournament selection
-        # # selected = [max(random.sample(list(zip(population, fitness_scores)), 20), key=lambda x: x[1])[0] for _ in population]
-        # selected = [x[0] for x in sorted(zip(population, fitness_scores), key=lambda x: x[1], reverse=True)[:2]]
-        # # print(len(set(selected))) #number of unique top selected genes
-        # #TODO: store fitness data 
-        # next_generation = []
-        # while len(next_generation) < population_size:
-        #     next_generation.extend(find_next(selected))
-        # population = next_generation
-    # best_individual = max(population, key=lambda ind: fitness(ind)[0])
-    # save_best_individual(best_individual)
+        print(f"Generation {gen+1}/{generations} - Best Fitness: {current_best_fitness}\n")
 
     return best_individual
 
@@ -292,8 +235,9 @@ def find_next(selected):
     child1, child2 = crossover(parent1, parent2)
     return [child1, child2, mutate(parent1), mutate(parent2)]
 
-pacwarrior_gene = genetic_algorithm()
+# pacwarrior_gene = genetic_algorithm()
 
-print("Optimized PacWarrior Gene:", pacwarrior_gene)
+# print("Optimized PacWarrior Gene:", pacwarrior_gene)
 
-test(pacwarrior_gene)
+test(load_best_individual())
+print(fitness(load_best_individual(), load_best_individual()))
