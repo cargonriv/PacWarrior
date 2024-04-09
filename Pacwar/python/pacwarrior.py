@@ -314,7 +314,7 @@ def genetic_algorithm(population_size=100, generations=100, mutation_rate=0.02, 
         # # selected = [max(random.sample(list(zip(population, fitness_scores)), 20), key=lambda x: x[1])[0] for _ in population]
         # selected = [x[0] for x in sorted(zip(population, fitness_scores), key=lambda x: x[1], reverse=True)[:2]]
         # # print(len(set(selected))) #number of unique top selected genes
-        # #TODO: store fitness data 
+        # #TODO: store fitness data
         # next_generation = []
         # while len(next_generation) < population_size:
         #     next_generation.extend(find_next(selected))
@@ -340,8 +340,8 @@ def find_next(selected):
 
 best_i = load_best_individual()
 print(best_i)
-next = '13000000111122203320213212233013213213313113102311'
-print(battle(best_i, next))
+next_i = '13000000111122203320213212233013213213313113102311'
+print(battle(best_i, next_i))
 print(test_ones_threes(best_i))
 
 # print(test_random(best_i, 20, True))
@@ -349,6 +349,3 @@ print(test_ones_threes(best_i))
 print(test_lots_random(best_i))
 # for i in range(20):
 #     print(f"score {i}: {test_100_random(best_i)}")
-
-
-
