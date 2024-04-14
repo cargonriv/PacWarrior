@@ -143,32 +143,6 @@ def score_calc_efficiency(rounds, warrior, opp):
     return base_score + survival_bonus
 
 
-def score_calc_no_zero(round, warrior, opp):
-    #rounds done, warrior mites remaining, opps remaining
-    #
-    #max rounds: 500
-    if (opp == 0):
-        if (round < 100):
-            return 20
-        if (round < 200):
-            return 19
-        if (round < 300):
-            return 18
-        if (round < 501):
-            return 17
-    ratio = warrior / opp * 1.0 #ratio of warrior mites remaining to opp mites remaining after 500 rounds
-
-    if (ratio > 10):
-        return 13
-    if (ratio > 3):
-        return 12
-    if (ratio > 1.5):
-        return 11
-    if (ratio < 1.5) and (ratio > 2 / 3.0):
-        return 10
-    return ratio
-
-
 def crossover(parent1, parent2):
     crossover_point = random.randint(1, len(parent1) - 2)
     child1 = parent1[:crossover_point] + parent2[crossover_point:]
@@ -246,19 +220,19 @@ def test_lots_random(warrior):
     '''
     Tests with 100000 random warriors, returns average score
     '''
-    return test_random(warrior, 100000) / 100000 
+    return test_random(warrior, 100000) / 100000
 
 
 
 # Initialize storage for fitness scores and populations
 fitness_scores_over_generations = []
 populations_over_generations = []
-def genetic_algorithm(population_size=50, generations=50, mutation_rate=0.02, crossover_rate=0.6, saved_individual=True, random=True):
-    best_individual = [0]*50
+def genetic_algorithm(population_size=100, generations=100, mutation_rate=0.02, crossover_rate=0.6, saved_individual=True, random=True):
     default_pop = [generate_individual() for _ in range(population_size - 1)]
+    best_individual = [0]*50
 
     if not random:
-        default_pop = [genetic_algorithm(population_size=50, generations=50, saved_individual=True, random=True) for _ in range(population_size - 1)]
+        default_pop = [genetic_algorithm(population_size=100, generations=100, saved_individual=True, random=True) for _ in range(population_size - 1)]
         print(f"good genes: {default_pop}")
     if saved_individual:
         best_individual = load_best_individual()
@@ -387,7 +361,7 @@ def test_against_pacwar_ii_gene(candidate_gene):
     print(f"Test Against Pacwar II Gene: Rounds = {rounds}, Candidate Remaining = {c1}, Pacwar II Remaining = {c2}")
 
 # Example usage
-x = 50  # Adjust based on desired execution time and experimentation
+x = 100  # Adjust based on desired execution time and experimentation
 best_gene = run_sub_algorithm(x)
 print(f"Best Gene: {best_gene}")
 test_against_pacwar_ii_gene(best_gene)
