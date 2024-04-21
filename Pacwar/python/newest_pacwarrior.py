@@ -29,11 +29,14 @@ def compete(gene1, gene2):
 
 def evaluate_gene(gene, population_size):
     # opponent_genes = [generate_individual() for _ in range(population_size)]
-    opponent_genes = [generate_individual() for _ in range(6)]
+    opponent_genes = [generate_individual() for _ in range(5)]
     opponent_genes.append([1] * GENE_LENGTH)
     opponent_genes.append([3] * GENE_LENGTH)
+    opponent_genes.append(list(map(int, list('33113313011021113313113223323123310123311223020300'.strip()))))
     opponent_genes.append(list(map(int, list('01320000133122023333133323222133133222133110301310'.strip()))))
     opponent_genes.append(list(map(int, list('01300030103021123333233323223030222032323310200310'.strip()))))
+    opponent_genes.append(list(map(int, list('00100000111122203003111111111111112111331131111330'.strip()))))
+    opponent_genes.append(list(map(int, list('01300000110022000133133323332333322233313312232303'.strip()))))
     
     score = 0
     for opponent_gene in opponent_genes:
@@ -211,8 +214,7 @@ def run(x):
         good_genes = []
         good_genes_str = []
         for i in range(x):
-            print('iteration #', i+1, '\n')
-
+            print(f'\niteration #{i + 1}')
             good_gene = evolution()
             good_genes.append(good_gene)
             good_gene_str = ''.join(map(str, good_gene))
@@ -255,10 +257,10 @@ def test_against_previous_pacwar_gene(candidate_gene, previous):
 
 
 # Constants
-X = 12  # Adjust based on desired execution time and experimentation
+X = 100  # Adjust based on desired execution time and experimentation
 DIGITS = [0, 1, 2, 3]
-POPULATION_SIZE = 50
-GENERATIONS = 50
+POPULATION_SIZE = 100
+GENERATIONS = 100
 GENE_LENGTH = 50
 BASE_RATE = 0.05
 
